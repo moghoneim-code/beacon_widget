@@ -1,28 +1,33 @@
 # beacon_widget
 
-Tap a widget in your running app and get a precise, machine-readable reference to it on your
-clipboard — ready to paste into Cursor, Claude Code, Codex CLI, or any other coding agent.
-
-Instead of describing a widget, point at it. "Make the checkout button rounder" leaves an agent
-guessing which of forty buttons you meant; a beacon reference tells it the exact file, line,
-resolved theme properties, size, position, and ancestor chain.
+Tap a widget in your running Flutter app. Get an exact reference to it on your clipboard:
 
 ```
-[ref] ElevatedButton @ lib/features/pos/widgets/checkout_bar.dart:142 · 180×48 · bg=colorScheme.primary · radius=8 · parent Row:130
+[ref] ElevatedButton @ lib/features/pos/widgets/checkout_bar.dart:142 · 180×48 · bg=colorScheme.primary · radius=8 · parent Row:130 · details: .ref/sel-a3f2.json
 ```
 
-beacon has two halves — an overlay that runs in your app, and a bridge that runs on your
-computer — but they ship as one package. There's nothing to install globally.
+Paste that into Cursor, Claude Code, Codex CLI, or any other coding agent.
 
-## Install
+## Why
+
+Describing a widget to an agent is lossy. "Make the checkout button rounder" leaves it guessing
+which of forty buttons you meant, then grepping for a plausible one. Pointing is exact:
+
+> Make this rounder and full-width on tablets.
+> `[ref] ElevatedButton @ lib/features/pos/widgets/checkout_bar.dart:142 · 180×48 · bg=colorScheme.primary · radius=8 · parent Row:130`
+
+The agent gets the file, the line, the resolved theme token, the size, and what it sits inside —
+without opening a thing.
+
+## Quick start
+
+**1. Add the package.**
 
 ```bash
 flutter pub add beacon_widget
 ```
 
-## Usage
-
-**1. Wrap your app once.**
+**2. Wrap your app once.**
 
 ```dart
 import 'package:beacon_widget/beacon_widget.dart';
@@ -33,121 +38,77 @@ MaterialApp(
 )
 ```
 
-This works with any root widget that exposes a `builder` — `MaterialApp`, `CupertinoApp`,
-`GetMaterialApp`, and so on.
+Any root widget with a `builder` works — `MaterialApp`, `CupertinoApp`, `GetMaterialApp`.
 
-**2. Run your app with the VM service address written to a file.**
+**3. Run your app, and the bridge, in two terminals.**
 
 ```bash
 flutter run --vmservice-out-file=.ref/vm.json
 ```
 
-**3. Run the bridge in a second terminal, from the same project root.**
-
 ```bash
 dart run beacon_widget:bridge --vmservice-out-file=.ref/vm.json
 ```
 
-Leave it running — it reconnects on its own across hot restarts and app relaunches.
+The two `--vmservice-out-file` paths must match — that file is how the bridge finds your app.
+Leave the bridge running; it reconnects across hot restarts and relaunches.
 
-**4. Tap the beacon button** in the corner of your app to enter select mode, then tap any widget.
-The reference lands on your clipboard. Paste it into your agent.
+**4. Tap the beacon button**, then tap any widget. The reference is on your clipboard.
 
 To combine several widgets into one reference, tap each of them, then tap the **Tap to send N**
 pill above the button.
 
-Add `.ref/` to your `.gitignore`.
+Add `.ref/` to your `.gitignore` — the bridge warns you at startup if it's missing.
+
+## How it works
+
+Flutter's `--track-widget-creation` tags every widget with the source location it was built from,
+which is what powers the Flutter Inspector. `flutter run` turns it on by default in debug builds.
+
+beacon reads that tag off whatever you tapped, then walks up the widget tree until it reaches
+code you actually wrote — past `Padding`, `Semantics`, `RepaintBoundary`, and anything from your
+`pub` dependencies — so you get *your* `SearchTextField`, not the `TextField` buried inside it.
+The rest of the payload comes from the live render tree.
 
 ## What a reference contains
 
-Each selection is copied to the clipboard as a single line and saved in full to
-`.ref/sel-<id>.json`, alongside a cropped screenshot of the widget:
+The clipboard gets one line. The full payload is saved to `.ref/sel-<id>.json`, next to a cropped
+screenshot of the widget:
 
 | | |
 |---|---|
-| **Location** | File, line and column where the widget was created |
-| **Theme properties** | Resolved values with provenance — `colorScheme.primary` rather than `#FF6750A4`, where beacon can trace it |
-| **Geometry** | Size, global position, and the constraints the widget was laid out under |
-| **Context** | Enclosing route, enclosing `State` class, and the ancestor widget chain |
+| **Location** | File, line and column the widget was created at |
+| **Theme properties** | Resolved with provenance — `colorScheme.primary` rather than `#FF6750A4`, where beacon can trace it |
+| **Geometry** | Size, global position, and the constraints it was laid out under |
+| **Context** | Enclosing route, enclosing `State` class, and the ancestor chain |
 | **Screenshot** | The widget itself, cropped from the live frame |
 
-## Bridge options
-
-| Flag | Default | Description |
-|---|---|---|
-| `--vmservice-out-file=<path>` | `.ref/vm.json` | The file to watch for your app's VM service address. Must match the path passed to `flutter run`. |
-| `--format=multiline` | single-line | Splits the reference across several lines. |
-
-Single-line is the default because many chat inputs send the message on a newline. For terminal
-agents that handle newlines, `--format=multiline` is easier to read:
-
-```
-[ref] ElevatedButton · lib/features/pos/widgets/checkout_bar.dart:142
-180×48 · bg=colorScheme.primary · radius=8 · parent Row:130
-→ .ref/sel-a3f2.json
-```
-
-The bridge overwrites your clipboard on every selection, with no undo — each copy prints a
-confirmation so it's never silent. Files in `.ref/` older than an hour are deleted at startup and
-every ten minutes while it runs.
-
-### Running the bridge from your IDE
-
-The bridge is a normal terminal command, so the built-in terminal works. For a Run button:
-
-- **Android Studio / IntelliJ** — *Run* → *Edit Configurations…* → **+** → **Shell Script** → set
-  *Execution* to *Script text*, with
-  `dart run beacon_widget:bridge --vmservice-out-file=.ref/vm.json`, and the working directory to
-  your project root.
-
-- **VS Code** — add a task in `.vscode/tasks.json`:
-
-  ```json
-  {
-    "version": "2.0.0",
-    "tasks": [
-      {
-        "label": "beacon bridge",
-        "type": "shell",
-        "command": "dart run beacon_widget:bridge --vmservice-out-file=.ref/vm.json",
-        "isBackground": true,
-        "problemMatcher": [],
-        "runOptions": { "runOn": "folderOpen" },
-        "presentation": { "panel": "dedicated", "reveal": "silent" }
-      }
-    ]
-  }
-  ```
-
-  `runOn: folderOpen` starts it with the project. Prefer it over `preLaunchTask`: the bridge runs
-  indefinitely and never signals completion, so VS Code would wait on it forever before launching
-  your app.
+The clipboard line links to that JSON, so an agent can read the full detail when the summary
+isn't enough.
 
 ## Controlling the overlay
 
-`Beacon.attach` hides its own overlay for a second whenever it detects an OS screenshot, so
-screenshots you share don't include the dev-tool button.
+beacon hides its own button for a second when it detects an OS screenshot, so screenshots you
+share don't show dev-tool chrome.
 
-This is reactive: the OS has already captured the frame by the time the detection fires, so an
-isolated screenshot still shows the button once. It helps with bursts of screenshots and screen
-recordings, where only the first frame would have included it.
-
-For a screenshot guaranteed to be clean, hide the overlay yourself:
+That's reactive — the OS has already captured the frame by the time the detection fires, so an
+isolated screenshot still catches the button once. It helps with bursts and screen recordings.
+For a guaranteed-clean shot, hide it yourself:
 
 ```dart
 Beacon.hide();   // take the screenshot
 Beacon.show();
 ```
 
-| Method | Effect |
+| Member | Effect |
 |---|---|
 | `Beacon.hide()` | Hides the button, outline and chip. Also exits select mode. |
 | `Beacon.show()` | Shows them again. |
-| `Beacon.setVisible(bool)` | Sets visibility directly — convenient for a `Switch` in your own debug settings. |
-| `Beacon.visible` | The underlying `ValueNotifier<bool>`, if you want to listen to it. |
+| `Beacon.setVisible(bool)` | Sets visibility directly. |
+| `Beacon.visible` | The underlying `ValueNotifier<bool>`. |
 
 ```dart
-// Wiring it to a toggle in your own debug UI:
+// A toggle in your own debug settings:
 ValueListenableBuilder<bool>(
   valueListenable: Beacon.visible,
   builder: (context, visible, _) => Switch(
@@ -157,56 +118,123 @@ ValueListenableBuilder<bool>(
 )
 ```
 
+## Bridge options
+
+| Flag | Default | Description |
+|---|---|---|
+| `--vmservice-out-file=<path>` | `.ref/vm.json` | File to watch for your app's VM service address. Must match what you pass to `flutter run`. |
+| `--format=multiline` | single-line | Splits the reference across several lines. |
+
+Single-line is the default because many chat inputs send on Enter. For terminal agents that
+handle newlines:
+
+```
+[ref] ElevatedButton · lib/features/pos/widgets/checkout_bar.dart:142
+180×48 · bg=colorScheme.primary · radius=8 · parent Row:130
+→ .ref/sel-a3f2.json
+```
+
+The bridge replaces your clipboard on every selection, with no undo — it prints a confirmation
+each time, so it's never silent. Files in `.ref/` older than an hour are pruned at startup and
+every ten minutes while it runs.
+
+## IDE setup
+
+Launching from your IDE's Run button skips `--vmservice-out-file` unless you add it. Both halves,
+once per project:
+
+### Android Studio / IntelliJ
+
+**Pass the flag to your app** — *Run* → *Edit Configurations…* → your Flutter configuration →
+**Additional run args**:
+
+```
+--vmservice-out-file=.ref/vm.json
+```
+
+Use **Additional run args**, not *Attach args*. They're separate fields, and the latter only
+applies to Flutter Attach — a flag in the wrong box does nothing, which looks exactly like the
+bridge failing to connect.
+
+**Run the bridge** from the built-in terminal, or give it a Run button: *Run* → *Edit
+Configurations…* → **+** → **Shell Script** → *Execution: Script text*, with
+`dart run beacon_widget:bridge --vmservice-out-file=.ref/vm.json` and the working directory set
+to your project root.
+
+### VS Code
+
+**Pass the flag to your app**, in `.vscode/launch.json`:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter (with beacon)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "args": ["--vmservice-out-file=.ref/vm.json"]
+    }
+  ]
+}
+```
+
+**Run the bridge** as a task in `.vscode/tasks.json`:
+
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "beacon bridge",
+      "type": "shell",
+      "command": "dart run beacon_widget:bridge --vmservice-out-file=.ref/vm.json",
+      "isBackground": true,
+      "problemMatcher": [],
+      "runOptions": { "runOn": "folderOpen" },
+      "presentation": { "panel": "dedicated", "reveal": "silent" }
+    }
+  ]
+}
+```
+
+`runOn: folderOpen` starts it with the project. Prefer it over `preLaunchTask` — the bridge runs
+indefinitely and never reports completion, so VS Code would wait on it forever before launching
+your app.
+
+## Troubleshooting
+
+**The bridge sits on "Watching .ref/vm.json…" and never connects.**
+The flag isn't reaching `flutter run` — see [IDE setup](#ide-setup). To confirm, run your app from
+the terminal with `--vmservice-out-file=.ref/vm.json`; if it connects that way, your run
+configuration is the problem.
+
+**Taps resolve to a widget I didn't expect.**
+beacon reports the nearest widget in your own code. If it can't find one and falls back to a less
+certain match, the on-screen chip turns amber and the JSON records `"confidence": "low"`.
+
+**Nothing happens when I tap.**
+Check select mode is on — the button shows a close icon while it's active.
+
+**`Beacon` is undefined.**
+Add `import 'package:beacon_widget/beacon_widget.dart';`, and keep `beacon_widget` under
+`dependencies` rather than `dev_dependencies` if you import it from `lib/`.
+
 ## Debug builds only
 
 `Beacon.attach` returns its child unmodified outside debug builds — no overlay, no VM service
 traffic, nothing to strip before shipping.
 
-This is a hard constraint rather than a safety setting. Resolving a widget to a source location
-relies on Flutter's `--track-widget-creation` instrumentation, which Flutter only enables in
-debug mode. There is no profile or release equivalent, so beacon is a development-time tool by
-nature.
-
-## Troubleshooting
-
-**The bridge never connects — it sits on "Watching .ref/vm.json for the VM service address…"**
-
-The `--vmservice-out-file` flag isn't reaching `flutter run`. Launching from your IDE's Run or
-Debug button starts `flutter run` without it unless you add it to the run configuration:
-
-- **Android Studio / IntelliJ** — *Run* → *Edit Configurations…* → select your Flutter
-  configuration → **Additional run args** → add `--vmservice-out-file=.ref/vm.json`.
-
-  (Note that **Additional run args** and *Attach args* are separate fields. The latter only
-  applies to Flutter Attach.)
-
-- **VS Code** — in `.vscode/launch.json`:
-
-  ```json
-  {
-    "name": "Flutter (with beacon_widget)",
-    "type": "dart",
-    "request": "launch",
-    "args": ["--vmservice-out-file=.ref/vm.json"]
-  }
-  ```
-
-Use the same path in both places — the flag and the bridge are two ends of one handshake.
-
-**Taps resolve to a widget I didn't expect**
-
-beacon resolves to the nearest widget created in your own code, skipping framework internals and
-widgets from packages you depend on. When it can't find one and has to fall back to a less
-certain match, the on-screen chip turns amber and the saved JSON records
-`"confidence": "low"`.
-
-**Nothing happens when I tap**
-
-Check that select mode is on — the button shows a close icon while it's active.
+That's a constraint, not just a safety setting: `--track-widget-creation` is debug-only, and there
+is no profile or release equivalent to fall back on. beacon is a development-time tool by nature.
 
 ## Platform support
 
 Android, iOS, macOS, Windows and Linux. Web is not supported.
+
+The bridge runs wherever you develop — it copies via `pbcopy`, `xclip` or `clip`, so there's no
+clipboard dependency or permission prompt. On Linux, install `xclip`.
 
 ## License
 

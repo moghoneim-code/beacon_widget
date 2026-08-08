@@ -1,3 +1,9 @@
+## 0.2.1
+
+- Rewrite the README: lead with the paste-into-an-agent workflow, explain how
+  widget resolution actually works, and fold the IDE setup for both the app and
+  the bridge into one section.
+
 ## 0.2.0
 
 The desktop bridge now ships inside this package. `beacon_bridge` is
