@@ -45,11 +45,7 @@ class ResolvedTarget {
   }
 }
 
-const List<String> _denylistedPathSegments = <String>[
-  'packages/flutter/',
-  '/.pub-cache/',
-  '/hosted/pub.dev/',
-];
+const List<String> _denylistedPathSegments = <String>['packages/flutter/', '/.pub-cache/', '/hosted/pub.dev/'];
 
 bool isDenylistedPath(String file) => _denylistedPathSegments.any(file.contains);
 

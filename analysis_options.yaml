@@ -2,3 +2,7 @@ include: package:flutter_lints/flutter.yaml
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
+
+# The codebase is written to a 120-column width.
+formatter:
+  page_width: 120

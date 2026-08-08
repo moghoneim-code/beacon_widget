@@ -57,7 +57,9 @@ class Beacon {
   static Widget attach(Widget child) {
     if (!kDebugMode) return child;
     _registerExtensions();
-    return BeaconOverlay(child: RepaintBoundary(key: _boundaryKey, child: child));
+    return BeaconOverlay(
+      child: RepaintBoundary(key: _boundaryKey, child: child),
+    );
   }
 
   static bool _extensionsRegistered = false;
@@ -89,7 +91,9 @@ class Beacon {
   /// outline, chip, or tap-catcher.
   static ResolvedTarget? peek(BuildContext context, Offset globalPosition, {RenderBox? within}) {
     if (!kDebugMode) return null;
-    final HitTestResult result = within != null ? hitTestInBox(within, globalPosition) : hitTestAt(context, globalPosition);
+    final HitTestResult result = within != null
+        ? hitTestInBox(within, globalPosition)
+        : hitTestAt(context, globalPosition);
     return resolveTapTarget(renderObjectsInPath(result));
   }
 

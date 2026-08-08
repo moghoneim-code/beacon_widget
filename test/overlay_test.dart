@@ -25,7 +25,10 @@ void main() {
   });
 
   tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(_noScreenshotMethods, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+      _noScreenshotMethods,
+      null,
+    );
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockStreamHandler(_noScreenshotEvents, null);
   });
 
@@ -41,14 +44,22 @@ void main() {
     // Enter select mode.
     await tester.tap(find.byType(BeaconMark));
     await tester.pump();
-    expect(find.byIcon(Icons.close), findsOneWidget, reason: 'FAB should flip to the close icon once select mode is on');
+    expect(
+      find.byIcon(Icons.close),
+      findsOneWidget,
+      reason: 'FAB should flip to the close icon once select mode is on',
+    );
 
     // Tap the app content underneath the overlay.
     // warnIfMissed: false — the tap is meant to land on the select-mode
     // catcher above 'Tap me', not the text itself; that's the point.
     await tester.tap(find.text('Tap me'), warnIfMissed: false);
     await tester.pump(); // same-frame outline/chip
-    expect(find.textContaining('Text ·'), findsOneWidget, reason: 'chip should name the real widget, not overlay.dart internals');
+    expect(
+      find.textContaining('Text ·'),
+      findsOneWidget,
+      reason: 'chip should name the real widget, not overlay.dart internals',
+    );
     // RenderRepaintBoundary.toImage() needs real engine rasterization, which
     // the fake test clock behind plain pump()/pumpAndSettle() never drives —
     // runAsync briefly steps outside it so that Future actually resolves.
@@ -101,7 +112,9 @@ void main() {
     expect(find.text('Sent 2 refs'), findsNothing, reason: 'confirmation chip should auto-dismiss like any other');
   });
 
-  testWidgets('Beacon.hide hides the FAB and exits select mode; Beacon.show brings it back', (WidgetTester tester) async {
+  testWidgets('Beacon.hide hides the FAB and exits select mode; Beacon.show brings it back', (
+    WidgetTester tester,
+  ) async {
     addTearDown(() => Beacon.visible.value = true);
 
     await tester.pumpWidget(
@@ -126,10 +139,18 @@ void main() {
     // select mode — otherwise it'd be an invisible tap trap.
     await tester.tap(find.text('Tap me'));
     await tester.pump();
-    expect(find.textContaining('Text ·'), findsNothing, reason: 'no chip should appear — the tap should reach the app, not resolve a selection');
+    expect(
+      find.textContaining('Text ·'),
+      findsNothing,
+      reason: 'no chip should appear — the tap should reach the app, not resolve a selection',
+    );
 
     Beacon.show();
     await tester.pump();
-    expect(find.byType(BeaconMark), findsOneWidget, reason: 'FAB should reappear, back in its default (not select-mode) state');
+    expect(
+      find.byType(BeaconMark),
+      findsOneWidget,
+      reason: 'FAB should reappear, back in its default (not select-mode) state',
+    );
   });
 }

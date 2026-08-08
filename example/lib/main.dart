@@ -17,7 +17,9 @@ class BeaconTestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Beacon Widget Matrix',
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple)),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      ),
       builder: (context, child) => Beacon.attach(child!),
       home: const WidgetMatrixScreen(),
     );
@@ -42,7 +44,10 @@ class _WidgetMatrixScreenState extends State<WidgetMatrixScreen> {
         title: const Text('Beacon Widget Matrix'),
         actions: const [_BeaconVisibilityToggle(), SizedBox(width: 8)],
       ),
-      floatingActionButton: FloatingActionButton(onPressed: () {}, child: const Icon(Icons.add)),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        child: const Icon(Icons.add),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -94,9 +99,17 @@ class _WidgetMatrixScreenState extends State<WidgetMatrixScreen> {
                 Positioned(
                   left: 0,
                   top: 0,
-                  child: Container(width: 100, height: 80, color: Colors.grey.shade300),
+                  child: Container(
+                    width: 100,
+                    height: 80,
+                    color: Colors.grey.shade300,
+                  ),
                 ),
-                const Positioned(left: 20, top: 20, child: BeaconCard(label: 'Behind Stack')),
+                const Positioned(
+                  left: 20,
+                  top: 20,
+                  child: BeaconCard(label: 'Behind Stack'),
+                ),
               ],
             ),
           ),
@@ -115,20 +128,33 @@ class _WidgetMatrixScreenState extends State<WidgetMatrixScreen> {
           const _Section('7. Form controls'),
           Row(
             children: [
-              Checkbox(value: _checkboxValue, onChanged: (v) => setState(() => _checkboxValue = v)),
-              Switch(value: _switchValue, onChanged: (v) => setState(() => _switchValue = v)),
+              Checkbox(
+                value: _checkboxValue,
+                onChanged: (v) => setState(() => _checkboxValue = v),
+              ),
+              Switch(
+                value: _switchValue,
+                onChanged: (v) => setState(() => _switchValue = v),
+              ),
               const SizedBox(width: 12),
               Chip(label: const Text('A chip')),
             ],
           ),
           const SizedBox(height: 12),
-          const TextField(decoration: InputDecoration(labelText: 'A text field', border: OutlineInputBorder())),
+          const TextField(
+            decoration: InputDecoration(
+              labelText: 'A text field',
+              border: OutlineInputBorder(),
+            ),
+          ),
           const SizedBox(height: 16),
 
           const _Section('8. Deeply nested custom widget'),
           const Padding(
             padding: EdgeInsets.all(4),
-            child: Center(child: BeaconCard(label: 'Nested in Padding > Center')),
+            child: Center(
+              child: BeaconCard(label: 'Nested in Padding > Center'),
+            ),
           ),
           const SizedBox(height: 16),
 
@@ -206,7 +232,10 @@ class WrappedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(onPressed: () {}, child: const Text('Wrapped in Semantics/RepaintBoundary'));
+    return OutlinedButton(
+      onPressed: () {},
+      child: const Text('Wrapped in Semantics/RepaintBoundary'),
+    );
   }
 }
 
@@ -217,6 +246,9 @@ class ProductRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(leading: const Icon(Icons.inventory_2_outlined), title: Text('Product #$index'));
+    return ListTile(
+      leading: const Icon(Icons.inventory_2_outlined),
+      title: Text('Product #$index'),
+    );
   }
 }

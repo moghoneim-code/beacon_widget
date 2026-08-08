@@ -25,7 +25,11 @@ class BeaconMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color resolvedColor = color ?? IconTheme.of(context).color ?? const Color(0xFFFFFFFF);
-    return SizedBox(width: size, height: size, child: CustomPaint(painter: _BeaconMarkPainter(resolvedColor)));
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _BeaconMarkPainter(resolvedColor)),
+    );
   }
 }
 

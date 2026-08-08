@@ -63,12 +63,9 @@ class _BeaconOverlayState extends State<BeaconOverlay> {
     // below instead: a missing or failing listener should never take the
     // rest of the overlay down with it.
     if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
-      _screenshotSubscription = NoScreenshot.instance.screenshotStream.listen(
-        (ScreenshotSnapshot snapshot) {
-          if (snapshot.wasScreenshotTaken) _handleScreenshotDetected();
-        },
-        onError: (Object _) {},
-      );
+      _screenshotSubscription = NoScreenshot.instance.screenshotStream.listen((ScreenshotSnapshot snapshot) {
+        if (snapshot.wasScreenshotTaken) _handleScreenshotDetected();
+      }, onError: (Object _) {});
       unawaited(NoScreenshot.instance.startScreenshotListening().catchError((Object _) {}));
     }
     Beacon.visible.addListener(_handleVisibilityChanged);
@@ -220,7 +217,9 @@ class _BeaconOverlayState extends State<BeaconOverlay> {
           Positioned.fromRect(
             rect: _outlineBounds!,
             child: IgnorePointer(
-              child: DecoratedBox(decoration: BoxDecoration(border: Border.all(color: Colors.blueAccent, width: 2))),
+              child: DecoratedBox(
+                decoration: BoxDecoration(border: Border.all(color: Colors.blueAccent, width: 2)),
+              ),
             ),
           ),
         if (_chromeVisible && _chipText != null)
@@ -228,10 +227,19 @@ class _BeaconOverlayState extends State<BeaconOverlay> {
             left: 0,
             right: 0,
             bottom: 100,
-            child: IgnorePointer(child: Center(child: _SelectionChip(text: _chipText!, lowConfidence: _chipLowConfidence))),
+            child: IgnorePointer(
+              child: Center(
+                child: _SelectionChip(text: _chipText!, lowConfidence: _chipLowConfidence),
+              ),
+            ),
           ),
         if (_chromeVisible)
-          _DraggableFab(selectMode: _selectMode, stackCount: _stack.length, onTap: _toggleSelectMode, onBroadcast: _handleBroadcastStack),
+          _DraggableFab(
+            selectMode: _selectMode,
+            stackCount: _stack.length,
+            onTap: _toggleSelectMode,
+            onBroadcast: _handleBroadcastStack,
+          ),
       ],
     );
   }
@@ -251,7 +259,10 @@ class _SelectionChip extends StatelessWidget {
       elevation: 4,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+        child: Text(
+          text,
+          style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+        ),
       ),
     );
   }
@@ -269,7 +280,12 @@ class _SelectionChip extends StatelessWidget {
 /// testing this on-device, where the long-press routinely lost the gesture
 /// arena to the drag.
 class _DraggableFab extends StatefulWidget {
-  const _DraggableFab({required this.selectMode, required this.stackCount, required this.onTap, required this.onBroadcast});
+  const _DraggableFab({
+    required this.selectMode,
+    required this.stackCount,
+    required this.onTap,
+    required this.onBroadcast,
+  });
 
   final bool selectMode;
   final int stackCount;

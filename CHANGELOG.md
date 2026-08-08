@@ -1,3 +1,10 @@
+## 0.1.1
+
+- Shorten the package description to pub.dev's recommended 60–180 characters.
+- Point the repository links at the renamed GitHub repository.
+- Set the formatter's page width to 120 to match the codebase, and format
+  accordingly.
+
 ## 0.1.0
 
 Initial release.
