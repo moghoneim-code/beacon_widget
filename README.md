@@ -1,61 +1,141 @@
-Tap a widget on your phone, get a precise, machine-readable reference to it on your computer's
-clipboard — ready to paste into Cursor, Claude Code, or Codex CLI.
+# beacon
 
-Point instead of describing: "make the checkout button rounder" makes an agent guess which of
-40 buttons you meant. This gets it the exact file, line, resolved theme props, geometry, and
-ancestor chain, for free.
+Tap a widget in your running app and get a precise, machine-readable reference to it on your
+clipboard — ready to paste into Cursor, Claude Code, Codex CLI, or any other coding agent.
 
-## Getting started
+Instead of describing a widget, point at it. "Make the checkout button rounder" leaves an agent
+guessing which of forty buttons you meant; a beacon reference tells it the exact file, line,
+resolved theme properties, size, position, and ancestor chain.
 
-Wrap your app once:
+```
+[ref] ElevatedButton @ lib/features/pos/widgets/checkout_bar.dart:142 · 180×48 · bg=colorScheme.primary · radius=8 · parent Row:130
+```
+
+beacon is the on-device half. It pairs with
+[`beacon_bridge`](https://pub.dev/packages/beacon_bridge), a CLI that runs on your development
+machine and does the clipboard work.
+
+## Install
+
+Add the package:
+
+```bash
+flutter pub add beacon
+```
+
+Install the bridge:
+
+```bash
+dart pub global activate beacon_bridge
+```
+
+## Usage
+
+**1. Wrap your app once.**
 
 ```dart
+import 'package:beacon/beacon.dart';
+
 MaterialApp(
   builder: (context, child) => Beacon.attach(child!),
   home: const MyHomePage(),
 )
 ```
 
-Then run [`beacon_bridge`](https://pub.dev/packages/beacon_bridge) on your computer, attached to
-the same `flutter run` you're already using:
+This works with any root widget that exposes a `builder` — `MaterialApp`, `CupertinoApp`,
+`GetMaterialApp`, and so on.
+
+**2. Run your app with the VM service address written to a file.**
 
 ```bash
 flutter run --vmservice-out-file=.ref/vm.json
 ```
 
-```bash
-# Once beacon_bridge is on pub.dev:
-dart pub global activate beacon_bridge
-beacon_bridge --vmservice-out-file=.ref/vm.json
+**3. Run the bridge in a second terminal, from the same project root.**
 
-# Before then, installing from a local checkout:
-dart pub global activate --source path /path/to/packages/beacon_bridge
-dart pub global run beacon_bridge --vmservice-out-file=.ref/vm.json
+```bash
+beacon_bridge --vmservice-out-file=.ref/vm.json
 ```
 
-A path-based activation deliberately doesn't put a `beacon_bridge` command on your `PATH` the
-way a pub.dev activation does — see
-[`beacon_bridge`'s README](https://pub.dev/packages/beacon_bridge) for why, and use the
-`dart pub global run` form until it's published.
+**4. Tap the beacon button** in the corner of your app to enter select mode, then tap any widget.
+The reference lands on your clipboard. Paste it into your agent.
 
-Tap the FAB to enter select mode, then tap anything in your app. A `[ref] ...` line lands on
-your clipboard — paste it into your agent chat.
+To combine several widgets into one reference, tap each of them, then tap the **Tap to send N**
+pill above the button.
 
-### IDE setup (Android Studio / VS Code)
+Add `.ref/` to your `.gitignore`.
 
-**The `--vmservice-out-file` flag has to actually reach `flutter run`.** Clicking your IDE's
-Run/Debug button launches `flutter run` the same way the terminal does — same VM Service, same
-USB tunnel — but *without* that flag by default. If `beacon_bridge` never seems to connect (it
-just sits on "Watching .ref/vm.json for the VM service address..." forever), this is almost
-always why: the file it's watching for is never getting written, because nothing told
-`flutter run` to write it.
+## What a reference contains
 
-Fix it once, per run configuration:
+Each selection is copied to the clipboard as a single line and saved in full to
+`.ref/sel-<id>.json`, alongside a cropped screenshot of the widget:
 
-- **Android Studio / IntelliJ:** *Run* → *Edit Configurations…* → select your Flutter app's
+| | |
+|---|---|
+| **Location** | File, line and column where the widget was created |
+| **Theme properties** | Resolved values with provenance — `colorScheme.primary` rather than `#FF6750A4`, where beacon can trace it |
+| **Geometry** | Size, global position, and the constraints the widget was laid out under |
+| **Context** | Enclosing route, enclosing `State` class, and the ancestor widget chain |
+| **Screenshot** | The widget itself, cropped from the live frame |
+
+## Controlling the overlay
+
+`Beacon.attach` hides its own overlay for a second whenever it detects an OS screenshot, so
+screenshots you share don't include the dev-tool button.
+
+This is reactive: the OS has already captured the frame by the time the detection fires, so an
+isolated screenshot still shows the button once. It helps with bursts of screenshots and screen
+recordings, where only the first frame would have included it.
+
+For a screenshot guaranteed to be clean, hide the overlay yourself:
+
+```dart
+Beacon.hide();   // take the screenshot
+Beacon.show();
+```
+
+| Method | Effect |
+|---|---|
+| `Beacon.hide()` | Hides the button, outline and chip. Also exits select mode. |
+| `Beacon.show()` | Shows them again. |
+| `Beacon.setVisible(bool)` | Sets visibility directly — convenient for a `Switch` in your own debug settings. |
+| `Beacon.visible` | The underlying `ValueNotifier<bool>`, if you want to listen to it. |
+
+```dart
+// Wiring it to a toggle in your own debug UI:
+ValueListenableBuilder<bool>(
+  valueListenable: Beacon.visible,
+  builder: (context, visible, _) => Switch(
+    value: visible,
+    onChanged: Beacon.setVisible,
+  ),
+)
+```
+
+## Debug builds only
+
+`Beacon.attach` returns its child unmodified outside debug builds — no overlay, no VM service
+traffic, nothing to strip before shipping.
+
+This is a hard constraint rather than a safety setting. Resolving a widget to a source location
+relies on Flutter's `--track-widget-creation` instrumentation, which Flutter only enables in
+debug mode. There is no profile or release equivalent, so beacon is a development-time tool by
+nature.
+
+## Troubleshooting
+
+**The bridge never connects — it sits on "Watching .ref/vm.json for the VM service address…"**
+
+The `--vmservice-out-file` flag isn't reaching `flutter run`. Launching from your IDE's Run or
+Debug button starts `flutter run` without it unless you add it to the run configuration:
+
+- **Android Studio / IntelliJ** — *Run* → *Edit Configurations…* → select your Flutter
   configuration → **Additional run args** → add `--vmservice-out-file=.ref/vm.json`.
-- **VS Code:** in `.vscode/launch.json`, add an `args` array to the configuration you use to
-  launch the app:
+
+  (Note that **Additional run args** and *Attach args* are separate fields. The latter only
+  applies to Flutter Attach.)
+
+- **VS Code** — in `.vscode/launch.json`:
 
   ```json
   {
@@ -66,40 +146,23 @@ Fix it once, per run configuration:
   }
   ```
 
-Either way, use the *same* path you pass to `beacon_bridge --vmservice-out-file=...` on your
-computer — they're just two ends of the same handshake.
+Use the same path in both places — the flag and the bridge are two ends of one handshake.
 
-## Hiding the FAB
+**Taps resolve to a widget I didn't expect**
 
-`Beacon.attach` also hides its own chrome (FAB, outline, chip) for a second whenever it detects
-an OS screenshot, so a screenshot you're sharing (a bug report, docs, Slack) doesn't need the
-dev-tool overlay explained away. **This is reactive, not preventative** — the OS has already
-rasterized the frame by the time the detection callback fires, so a single, isolated screenshot
-will still show the FAB once; it reliably helps with a burst of screenshots or a screen
-recording, where only the very first frame would've shown it.
+beacon resolves to the nearest widget created in your own code, skipping framework internals and
+widgets from packages you depend on. When it can't find one and has to fall back to a less
+certain match, the on-screen chip turns amber and the saved JSON records
+`"confidence": "low"`.
 
-If you want a screenshot guaranteed clean — no race, no "the first one still shows it" — hide
-the chrome yourself first:
+**Nothing happens when I tap**
 
-```dart
-Beacon.hide();   // take your screenshot
-Beacon.show();   // bring the FAB back
-```
+Check that select mode is on — the button shows a close icon while it's active.
 
-`Beacon.setVisible(bool)` is the same thing as a single call, handy for wiring to a toggle
-already in your own debug UI. Hiding also exits select mode if it was on, so there's never an
-invisible tap-catcher left eating taps meant for your app.
+## Platform support
 
-## Debug-only, by design
+Android, iOS, macOS, Windows and Linux. Web is not supported.
 
-`Beacon.attach` is a genuine no-op outside debug builds — it returns its child unmodified, no
-overlay, no VM service traffic. This isn't just a safety guard: it can't work any other way.
-Widget resolution
-depends on Flutter's `--track-widget-creation` instrumentation (the `file:line` every widget
-gets tagged with when building in debug mode), which Flutter itself only enables for debug
-builds. There is no profile/release equivalent to fall back to — this is inherently, and only
-ever, a development-time tool.
+## License
 
-## Additional information
-
-See `PLAN.md` in this repo for the full design and the phase-by-phase implementation notes.
+MIT
