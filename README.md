@@ -11,22 +11,13 @@ resolved theme properties, size, position, and ancestor chain.
 [ref] ElevatedButton @ lib/features/pos/widgets/checkout_bar.dart:142 · 180×48 · bg=colorScheme.primary · radius=8 · parent Row:130
 ```
 
-beacon_widget is the on-device half. It pairs with
-[`beacon_bridge`](https://pub.dev/packages/beacon_bridge), a CLI that runs on your development
-machine and does the clipboard work.
+beacon has two halves — an overlay that runs in your app, and a bridge that runs on your
+computer — but they ship as one package. There's nothing to install globally.
 
 ## Install
 
-Add the package:
-
 ```bash
 flutter pub add beacon_widget
-```
-
-Install the bridge:
-
-```bash
-dart pub global activate beacon_bridge
 ```
 
 ## Usage
@@ -54,8 +45,10 @@ flutter run --vmservice-out-file=.ref/vm.json
 **3. Run the bridge in a second terminal, from the same project root.**
 
 ```bash
-beacon_bridge --vmservice-out-file=.ref/vm.json
+dart run beacon_widget:bridge --vmservice-out-file=.ref/vm.json
 ```
+
+Leave it running — it reconnects on its own across hot restarts and app relaunches.
 
 **4. Tap the beacon button** in the corner of your app to enter select mode, then tap any widget.
 The reference lands on your clipboard. Paste it into your agent.
@@ -77,6 +70,58 @@ Each selection is copied to the clipboard as a single line and saved in full to
 | **Geometry** | Size, global position, and the constraints the widget was laid out under |
 | **Context** | Enclosing route, enclosing `State` class, and the ancestor widget chain |
 | **Screenshot** | The widget itself, cropped from the live frame |
+
+## Bridge options
+
+| Flag | Default | Description |
+|---|---|---|
+| `--vmservice-out-file=<path>` | `.ref/vm.json` | The file to watch for your app's VM service address. Must match the path passed to `flutter run`. |
+| `--format=multiline` | single-line | Splits the reference across several lines. |
+
+Single-line is the default because many chat inputs send the message on a newline. For terminal
+agents that handle newlines, `--format=multiline` is easier to read:
+
+```
+[ref] ElevatedButton · lib/features/pos/widgets/checkout_bar.dart:142
+180×48 · bg=colorScheme.primary · radius=8 · parent Row:130
+→ .ref/sel-a3f2.json
+```
+
+The bridge overwrites your clipboard on every selection, with no undo — each copy prints a
+confirmation so it's never silent. Files in `.ref/` older than an hour are deleted at startup and
+every ten minutes while it runs.
+
+### Running the bridge from your IDE
+
+The bridge is a normal terminal command, so the built-in terminal works. For a Run button:
+
+- **Android Studio / IntelliJ** — *Run* → *Edit Configurations…* → **+** → **Shell Script** → set
+  *Execution* to *Script text*, with
+  `dart run beacon_widget:bridge --vmservice-out-file=.ref/vm.json`, and the working directory to
+  your project root.
+
+- **VS Code** — add a task in `.vscode/tasks.json`:
+
+  ```json
+  {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "beacon bridge",
+        "type": "shell",
+        "command": "dart run beacon_widget:bridge --vmservice-out-file=.ref/vm.json",
+        "isBackground": true,
+        "problemMatcher": [],
+        "runOptions": { "runOn": "folderOpen" },
+        "presentation": { "panel": "dedicated", "reveal": "silent" }
+      }
+    ]
+  }
+  ```
+
+  `runOn: folderOpen` starts it with the project. Prefer it over `preLaunchTask`: the bridge runs
+  indefinitely and never signals completion, so VS Code would wait on it forever before launching
+  your app.
 
 ## Controlling the overlay
 

@@ -3,7 +3,7 @@ description: >-
   Tap a widget in your running Flutter app and get its file:line, theme
   properties and geometry on your clipboard, ready to paste into an AI coding
   agent.
-version: 0.1.1
+version: 0.2.0
 repository: https://github.com/moghoneim-code/beacon_widget
 issue_tracker: https://github.com/moghoneim-code/beacon_widget/issues
 topics:
@@ -16,10 +16,25 @@ environment:
   sdk: ^3.10.8
   flutter: ">=1.17.0"
 
+# The desktop-side bridge, run with:
+#   dart run beacon_widget:bridge --vmservice-out-file=.ref/vm.json
+executables:
+  bridge:
+
 dependencies:
   flutter:
     sdk: flutter
   no_screenshot: ^1.2.0
+  # Used only by the bridge (lib/bridge.dart, bin/bridge.dart), which runs on
+  # your development machine — never in the widget tree. They're regular
+  # dependencies rather than dev_dependencies because `dart run
+  # beacon_widget:bridge` has to resolve them from the consuming project.
+  # meta is capped at what the Flutter SDK pins (1.17.0) — a tighter
+  # constraint here makes the package unresolvable in any Flutter project.
+  # Only @visibleForTesting is used, which predates all of this.
+  meta: ^1.17.0
+  path: ^1.9.0
+  vm_service: ^15.2.0
 
 dev_dependencies:
   flutter_test:

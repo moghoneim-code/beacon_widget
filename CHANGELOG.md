@@ -1,3 +1,30 @@
+## 0.2.0
+
+The desktop bridge now ships inside this package. `beacon_bridge` is
+discontinued — there is nothing to install globally any more.
+
+**Migrating from 0.1.x:** drop `beacon_bridge`, and run the bridge from your
+project instead:
+
+```bash
+dart pub global deactivate beacon_bridge
+dart run beacon_widget:bridge --vmservice-out-file=.ref/vm.json
+```
+
+The Flutter API is unchanged; `Beacon.attach` and everything on it keep their
+names and behaviour. The paste format and the `.ref/` layout are unchanged too,
+so an existing setup keeps working once the command is swapped.
+
+- Add the `bridge` executable, runnable with `dart run beacon_widget:bridge`
+  from any project that depends on this package. No `dart pub global activate`,
+  no `~/.pub-cache/bin` on your `PATH`.
+- Add `package:beacon_widget/bridge.dart`, the bridge's library surface. It is
+  deliberately not exported from `beacon_widget.dart` — it targets your
+  development machine, not the widget tree.
+- Add `meta`, `path` and `vm_service` as dependencies. They are needed to
+  resolve the bridge executable from a consuming project, and are not reachable
+  from the Flutter API.
+
 ## 0.1.1
 
 - Shorten the package description to pub.dev's recommended 60–180 characters.
