@@ -1,254 +1,204 @@
-// Test harness: exercises the real `beacon` package — including the Phase 4
-// select-mode overlay — against a wide matrix of widget shapes (PLAN.md
-// §3.2 asks for ~15). Tap the FAB to enter select mode, then tap anything
-// below; long-press the FAB to broadcast everything selected since the
-// last broadcast as one combined reference (PLAN.md §6).
+// A small storefront, wired up with beacon_widget.
+//
+// Tap the beacon button, then tap anything on screen: the widget's file and
+// line land on your clipboard, ready to paste into a coding agent. The UI is
+// deliberately built from small named widgets spread across several files, so
+// the references it produces look like the ones you'd get in a real app.
 import 'package:beacon_widget/beacon_widget.dart';
 import 'package:flutter/material.dart';
 
+import 'data/products.dart';
+import 'widgets/category_chip.dart';
+import 'widgets/checkout_bar.dart';
+import 'widgets/product_card.dart';
+import 'widgets/promo_banner.dart';
+
 void main() {
-  runApp(const BeaconTestApp());
+  runApp(const BeaconDemoApp());
 }
 
-class BeaconTestApp extends StatelessWidget {
-  const BeaconTestApp({super.key});
+class BeaconDemoApp extends StatelessWidget {
+  const BeaconDemoApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Beacon Widget Matrix',
+      title: 'Beacon Demo',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF0D0D11),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF7C5CFF),
+          brightness: Brightness.dark,
+        ),
       ),
-      builder: (context, child) => Beacon.attach(child!),
-      home: const WidgetMatrixScreen(),
+      // The one line that installs beacon.
+      builder: (BuildContext context, Widget? child) => Beacon.attach(child!),
+      home: const StorefrontScreen(),
     );
   }
 }
 
-class WidgetMatrixScreen extends StatefulWidget {
-  const WidgetMatrixScreen({super.key});
+class StorefrontScreen extends StatefulWidget {
+  const StorefrontScreen({super.key});
 
   @override
-  State<WidgetMatrixScreen> createState() => _WidgetMatrixScreenState();
+  State<StorefrontScreen> createState() => _StorefrontScreenState();
 }
 
-class _WidgetMatrixScreenState extends State<WidgetMatrixScreen> {
-  bool _switchValue = false;
-  bool? _checkboxValue = true;
+class _StorefrontScreenState extends State<StorefrontScreen> {
+  String _category = 'All';
+
+  List<Product> get _visible => _category == 'All'
+      ? demoProducts
+      : demoProducts.where((Product p) => p.category == _category).toList();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Beacon Widget Matrix'),
-        actions: const [_BeaconVisibilityToggle(), SizedBox(width: 8)],
+        backgroundColor: const Color(0xFF0D0D11),
+        elevation: 0,
+        titleSpacing: 20,
+        title: const StoreHeader(),
+        actions: const <Widget>[BeaconVisibilityToggle(), SizedBox(width: 12)],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        child: const Icon(Icons.add),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const _Section('1. Custom widget'),
-          const BeaconCard(label: 'Custom widget (BeaconCard)'),
-          const SizedBox(height: 16),
-
-          const _Section('2. Material buttons'),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              ElevatedButton(onPressed: () {}, child: const Text('Elevated')),
-              OutlinedButton(onPressed: () {}, child: const Text('Outlined')),
-              TextButton(onPressed: () {}, child: const Text('Text')),
-              IconButton(onPressed: () {}, icon: const Icon(Icons.favorite)),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          const _Section('3. Button wrapped in framework noise'),
-          Semantics(
-            label: 'wrapped button',
-            child: RepaintBoundary(
-              child: AnimatedBuilder(
-                animation: const AlwaysStoppedAnimation(0),
-                builder: (context, child) => child!,
-                child: const WrappedButton(),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          const _Section('4. Text inside a standard ListTile'),
-          const Card(
-            child: ListTile(
-              leading: Icon(Icons.info_outline),
-              title: Text('Text inside ListTile'),
-              subtitle: Text('tap the title, subtitle, or leading icon'),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          const _Section('5. Widget behind a Stack'),
-          SizedBox(
-            height: 80,
-            child: Stack(
-              children: [
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  child: Container(
-                    width: 100,
-                    height: 80,
-                    color: Colors.grey.shade300,
+      body: Column(
+        children: <Widget>[
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+              children: <Widget>[
+                const PromoBanner(),
+                const SizedBox(height: 28),
+                const SectionHeading(title: 'Browse', action: 'See all'),
+                const SizedBox(height: 14),
+                SizedBox(
+                  height: 40,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: demoCategories.length,
+                    separatorBuilder: (BuildContext context, int i) =>
+                        const SizedBox(width: 10),
+                    itemBuilder: (BuildContext context, int i) => CategoryChip(
+                      label: demoCategories[i],
+                      selected: demoCategories[i] == _category,
+                      onTap: () =>
+                          setState(() => _category = demoCategories[i]),
+                    ),
                   ),
                 ),
-                const Positioned(
-                  left: 20,
-                  top: 20,
-                  child: BeaconCard(label: 'Behind Stack'),
+                const SizedBox(height: 24),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _visible.length,
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 320,
+                    mainAxisExtent: 284,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                  ),
+                  itemBuilder: (BuildContext context, int i) =>
+                      ProductCard(product: _visible[i]),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-
-          const _Section('6. Items inside ListView.builder'),
-          SizedBox(
-            height: 150,
-            child: ListView.builder(
-              itemCount: 3,
-              itemBuilder: (context, index) => ProductRow(index: index),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          const _Section('7. Form controls'),
-          Row(
-            children: [
-              Checkbox(
-                value: _checkboxValue,
-                onChanged: (v) => setState(() => _checkboxValue = v),
-              ),
-              Switch(
-                value: _switchValue,
-                onChanged: (v) => setState(() => _switchValue = v),
-              ),
-              const SizedBox(width: 12),
-              Chip(label: const Text('A chip')),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const TextField(
-            decoration: InputDecoration(
-              labelText: 'A text field',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          const _Section('8. Deeply nested custom widget'),
-          const Padding(
-            padding: EdgeInsets.all(4),
-            child: Center(
-              child: BeaconCard(label: 'Nested in Padding > Center'),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          const _Section('9. Theme-literal color (no token match expected)'),
-          Container(
-            padding: const EdgeInsets.all(12),
-            color: const Color(0xFF123456),
-            child: const Text('Literal color container'),
-          ),
+          const CheckoutBar(itemCount: 3, total: 372.50),
         ],
       ),
     );
   }
 }
 
-/// A debug settings toggle for `Beacon.visible` (`Beacon.hide`/`.show`) — a
-/// developer wires this into whatever settings UI their own app already
-/// has; this is just the example app's version of that. Rebuilds only
-/// itself off `Beacon.visible`, not the whole screen.
-class _BeaconVisibilityToggle extends StatelessWidget {
-  const _BeaconVisibilityToggle();
+/// The store's wordmark in the app bar.
+class StoreHeader extends StatelessWidget {
+  const StoreHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(11),
+            gradient: const LinearGradient(
+              colors: <Color>[Color(0xFF7C5CFF), Color(0xFFE05C8A)],
+            ),
+          ),
+          child: const Icon(Icons.bolt_rounded, color: Colors.white, size: 20),
+        ),
+        const SizedBox(width: 12),
+        const Text(
+          'Northwind',
+          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+        ),
+      ],
+    );
+  }
+}
+
+/// A titled section divider with a trailing text action.
+class SectionHeading extends StatelessWidget {
+  const SectionHeading({super.key, required this.title, required this.action});
+
+  final String title;
+  final String action;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Text(
+          title,
+          style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+        ),
+        const Spacer(),
+        TextButton(
+          onPressed: () {},
+          child: Text(
+            action,
+            style: const TextStyle(
+              color: Color(0xFF9B86FF),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Shows off `Beacon.visible` — flip it off before taking a screenshot, or
+/// wire it into whatever debug settings your own app already has.
+class BeaconVisibilityToggle extends StatelessWidget {
+  const BeaconVisibilityToggle({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
       valueListenable: Beacon.visible,
-      builder: (context, visible, _) {
+      builder: (BuildContext context, bool visible, Widget? child) {
         return Row(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Beacon'),
+          children: <Widget>[
+            Text(
+              'beacon',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.55),
+                fontSize: 13,
+              ),
+            ),
             Switch(value: visible, onChanged: Beacon.setVisible),
           ],
         );
       },
-    );
-  }
-}
-
-class _Section extends StatelessWidget {
-  const _Section(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(label, style: Theme.of(context).textTheme.labelLarge),
-    );
-  }
-}
-
-/// Custom widget the resolver should land on exactly, at the line below.
-class BeaconCard extends StatelessWidget {
-  const BeaconCard({super.key, required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(label),
-    );
-  }
-}
-
-class WrappedButton extends StatelessWidget {
-  const WrappedButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: () {},
-      child: const Text('Wrapped in Semantics/RepaintBoundary'),
-    );
-  }
-}
-
-class ProductRow extends StatelessWidget {
-  const ProductRow({super.key, required this.index});
-
-  final int index;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: const Icon(Icons.inventory_2_outlined),
-      title: Text('Product #$index'),
     );
   }
 }

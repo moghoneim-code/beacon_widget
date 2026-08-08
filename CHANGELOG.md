@@ -1,3 +1,12 @@
+## 0.2.3
+
+- Replace the example app with a small storefront: a gradient promo banner,
+  category filters, a product grid and a checkout bar, built from named
+  widgets across several files so the references it produces look like the
+  ones you'd get from a real app.
+- Add `example/tool/demo_drive.dart`, which scripts a selection run through
+  the VM Service — useful for recording a screencast without hand-tapping.
+
 ## 0.2.2
 
 - Document the Android Studio / IntelliJ run configuration for the bridge as a
