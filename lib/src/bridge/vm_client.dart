@@ -29,17 +29,37 @@ class VmClient {
   final BeaconEventHandler onSelected;
   final StatusHandler? onStatus;
 
+  /// How long to wait before assuming the app is never going to write the
+  /// file, and explaining why that usually happens.
+  static const Duration hintAfter = Duration(seconds: 12);
+
   StreamSubscription<FileSystemEvent>? _watchSub;
   VmService? _service;
   String? _connectedUri;
   Timer? _retryTimer;
+  Timer? _hintTimer;
   bool _stopped = false;
+  bool _everConnected = false;
+  late final DateTime _startedAt;
 
   Future<void> start() async {
+    _startedAt = DateTime.now();
     _status('Watching ${vmServiceOutFile.path} for the VM service address...');
     if (!vmServiceOutFile.parent.existsSync()) {
       vmServiceOutFile.parent.createSync(recursive: true);
     }
+
+    // A file left over from an earlier `flutter run` points at a port that
+    // died with it. Connecting then fails in a way that looks like a bug in
+    // the app rather than a stale address, so say so up front.
+    if (vmServiceOutFile.existsSync() && vmServiceOutFile.lastModifiedSync().isBefore(_startedAt)) {
+      _status(
+        '${vmServiceOutFile.path} is left over from an earlier run, so its address is probably dead. '
+        'Waiting for your app to rewrite it.',
+      );
+    }
+
+    _armHint();
     unawaited(_tryConnectFromFile());
     _watchSub = vmServiceOutFile.parent.watch(events: FileSystemEvent.all).listen((FileSystemEvent event) {
       if (event.path == vmServiceOutFile.path) {
@@ -51,8 +71,36 @@ class VmClient {
   Future<void> stop() async {
     _stopped = true;
     _retryTimer?.cancel();
+    _hintTimer?.cancel();
     await _watchSub?.cancel();
     await _service?.dispose();
+  }
+
+  void _armHint() {
+    _hintTimer?.cancel();
+    _hintTimer = Timer(hintAfter, () {
+      if (_stopped || _everConnected) return;
+      final String path = vmServiceOutFile.path;
+      final bool missing = !vmServiceOutFile.existsSync();
+      _status(
+        missing
+            ? 'Still nothing at $path.\n'
+                  '  Your app has not written it, which means --vmservice-out-file is not reaching\n'
+                  '  `flutter run`. Launching from an IDE Run button skips it unless you add it:\n'
+                  '    terminal        flutter run --vmservice-out-file=$path\n'
+                  '    Android Studio  Run > Edit Configurations > your Flutter config >\n'
+                  '                    "Additional run args"  (not "Attach args")\n'
+                  '    VS Code         "args": ["--vmservice-out-file=$path"] in launch.json\n'
+                  '  Check you are editing the configuration for the project you actually run —\n'
+                  '  a multi-package repo can have more than one.'
+            : 'Still not connected, though $path exists.\n'
+                  '  Its address may belong to an app that has since stopped. Restart your app\n'
+                  '  with --vmservice-out-file=$path so the file is rewritten.',
+      );
+      // Said once. The bridge is meant to be left running for hours, and
+      // repeating this every few seconds would bury the [ref] lines that
+      // appear once it does start working.
+    });
   }
 
   /// Exercises the same path a `FileSystemEvent` triggers. Exposed only so
@@ -94,6 +142,8 @@ class VmClient {
           onSelected(kind, data);
         }
       });
+      _everConnected = true;
+      _hintTimer?.cancel();
       _status('Connected.');
     } catch (e) {
       if (_connectedUri == wsUri) _connectedUri = null;

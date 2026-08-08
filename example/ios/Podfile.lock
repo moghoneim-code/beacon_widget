@@ -1,0 +1,22 @@
+PODS:
+  - Flutter (1.0.0)
+  - no_screenshot (1.2.0):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - no_screenshot (from `.symlinks/plugins/no_screenshot/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  no_screenshot:
+    :path: ".symlinks/plugins/no_screenshot/ios"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  no_screenshot: bd925a9ff0aaa3841cc46b0e9b7ef5cc5ae0a0bd
+
+PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
+
+COCOAPODS: 1.16.2

@@ -232,9 +232,24 @@ your app.
 ## Troubleshooting
 
 **The bridge sits on "Watching .ref/vm.json…" and never connects.**
-The flag isn't reaching `flutter run` — see [IDE setup](#ide-setup). To confirm, run your app from
-the terminal with `--vmservice-out-file=.ref/vm.json`; if it connects that way, your run
-configuration is the problem.
+
+Leave it running — after a few seconds it prints what to check. Almost always the flag isn't
+reaching `flutter run`; see [IDE setup](#ide-setup). Three things catch people out:
+
+- **The flag is in the wrong field.** In Android Studio, *Additional run args* is what regular
+  Run/Debug uses. *Attach args* only applies to Flutter Attach, and a flag there does nothing.
+- **You're editing a different project's configuration.** A repo with a package and its example
+  has two `.idea` directories, and only the one for the project you actually opened is read.
+- **`.ref/vm.json` is stale.** A file from an earlier run points at a port that died with it, so
+  the bridge connects to nothing. Delete it and relaunch.
+
+The one check that separates these: after launching your app, confirm `.ref/vm.json` has a
+**fresh timestamp**. If it's missing or old, the flag isn't getting through, and nothing
+downstream can work.
+
+```bash
+ls -l .ref/vm.json
+```
 
 **Taps resolve to a widget I didn't expect.**
 beacon reports the nearest widget in your own code. If it can't find one and falls back to a less

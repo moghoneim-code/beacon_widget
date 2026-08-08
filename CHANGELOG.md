@@ -1,3 +1,21 @@
+## 0.3.0
+
+The bridge now explains itself when it can't connect, instead of waiting in
+silence. Both cases below were hit repeatedly in real use, and neither was
+diagnosable from the output.
+
+- If the vmservice-out-file never appears, the bridge prints where the flag
+  has to go for the terminal, Android Studio and VS Code — including that
+  Android Studio's "Additional run args" and "Attach args" are different
+  fields, and that a repo with several packages has more than one run
+  configuration to choose between. Printed once, not on a loop.
+- If the file is already there but predates the bridge starting, it says so.
+  A leftover address points at a port that died with the previous run, so
+  connecting fails in a way that looks like a bug in the app.
+- Expand the README's troubleshooting with the same three causes, and the
+  single check that distinguishes them: whether .ref/vm.json has a fresh
+  timestamp after launching.
+
 ## 0.2.3
 
 - Replace the example app with a small storefront: a gradient promo banner,
