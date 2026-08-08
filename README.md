@@ -156,10 +156,36 @@ Use **Additional run args**, not *Attach args*. They're separate fields, and the
 applies to Flutter Attach — a flag in the wrong box does nothing, which looks exactly like the
 bridge failing to connect.
 
-**Run the bridge** from the built-in terminal, or give it a Run button: *Run* → *Edit
-Configurations…* → **+** → **Shell Script** → *Execution: Script text*, with
-`dart run beacon_widget:bridge --vmservice-out-file=.ref/vm.json` and the working directory set
-to your project root.
+**Run the bridge** from the built-in terminal, or give it a Run button by dropping this in
+`.idea/runConfigurations/beacon_bridge.xml`:
+
+```xml
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="beacon bridge" type="ShConfigurationType">
+    <option name="SCRIPT_TEXT" value="dart run beacon_widget:bridge --vmservice-out-file=.ref/vm.json" />
+    <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
+    <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
+    <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="INDEPENDENT_INTERPRETER_PATH" value="true" />
+    <option name="INTERPRETER_PATH" value="/bin/zsh" />
+    <option name="INTERPRETER_OPTIONS" value="-l" />
+    <option name="EXECUTE_IN_TERMINAL" value="true" />
+    <option name="EXECUTE_SCRIPT_FILE" value="false" />
+    <envs />
+    <method v="2" />
+  </configuration>
+</component>
+```
+
+It appears in the run dropdown as *beacon bridge* after the IDE reloads. Equivalent to doing it by
+hand: *Run* → *Edit Configurations…* → **+** → **Shell Script** → *Execution: Script text*.
+
+> **If you have more than one Flutter SDK installed, check which `dart` this picks up.** The run
+> configuration uses a login shell, which may resolve `dart` differently from the terminal you
+> normally use — with fvm, a system-wide Flutter often wins, and an older Dart will fail to
+> resolve your dependencies at all. Run `zsh -lc 'dart --version'` to see which one you'd get. If
+> it's the wrong one, use `fvm dart run beacon_widget:bridge …` in `SCRIPT_TEXT`, or the absolute
+> path to the right SDK.
 
 ### VS Code
 

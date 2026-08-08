@@ -1,3 +1,13 @@
+## 0.2.2
+
+- Document the Android Studio / IntelliJ run configuration for the bridge as a
+  drop-in `.idea/runConfigurations/*.xml`, rather than a walk through the
+  Edit Configurations dialog.
+- Warn that a run configuration's login shell can resolve a different `dart`
+  than your terminal does. With more than one Flutter SDK installed (fvm plus a
+  system-wide install, say), the older one can win and fail to resolve the
+  project's dependencies.
+
 ## 0.2.1
 
 - Rewrite the README: lead with the paste-into-an-agent workflow, explain how
