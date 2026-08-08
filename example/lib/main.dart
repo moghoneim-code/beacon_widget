@@ -3,7 +3,7 @@
 // §3.2 asks for ~15). Tap the FAB to enter select mode, then tap anything
 // below; long-press the FAB to broadcast everything selected since the
 // last broadcast as one combined reference (PLAN.md §6).
-import 'package:beacon/beacon.dart';
+import 'package:beacon_widget/beacon_widget.dart';
 import 'package:flutter/material.dart';
 
 void main() {

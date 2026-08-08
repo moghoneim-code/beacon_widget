@@ -1,4 +1,4 @@
-name: beacon
+name: beacon_widget
 description: >-
   Tap a widget on your running app and get its exact file:line, resolved theme
   properties, geometry and ancestor chain on your development machine's

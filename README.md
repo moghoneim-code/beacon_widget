@@ -1,4 +1,4 @@
-# beacon
+# beacon_widget
 
 Tap a widget in your running app and get a precise, machine-readable reference to it on your
 clipboard — ready to paste into Cursor, Claude Code, Codex CLI, or any other coding agent.
@@ -11,7 +11,7 @@ resolved theme properties, size, position, and ancestor chain.
 [ref] ElevatedButton @ lib/features/pos/widgets/checkout_bar.dart:142 · 180×48 · bg=colorScheme.primary · radius=8 · parent Row:130
 ```
 
-beacon is the on-device half. It pairs with
+beacon_widget is the on-device half. It pairs with
 [`beacon_bridge`](https://pub.dev/packages/beacon_bridge), a CLI that runs on your development
 machine and does the clipboard work.
 
@@ -20,7 +20,7 @@ machine and does the clipboard work.
 Add the package:
 
 ```bash
-flutter pub add beacon
+flutter pub add beacon_widget
 ```
 
 Install the bridge:
@@ -34,7 +34,7 @@ dart pub global activate beacon_bridge
 **1. Wrap your app once.**
 
 ```dart
-import 'package:beacon/beacon.dart';
+import 'package:beacon_widget/beacon_widget.dart';
 
 MaterialApp(
   builder: (context, child) => Beacon.attach(child!),
@@ -139,7 +139,7 @@ Debug button starts `flutter run` without it unless you add it to the run config
 
   ```json
   {
-    "name": "Flutter (with beacon)",
+    "name": "Flutter (with beacon_widget)",
     "type": "dart",
     "request": "launch",
     "args": ["--vmservice-out-file=.ref/vm.json"]

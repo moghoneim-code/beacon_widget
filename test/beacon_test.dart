@@ -1,5 +1,5 @@
-import 'package:beacon/src/payload.dart';
-import 'package:beacon/src/resolver.dart';
+import 'package:beacon_widget/src/payload.dart';
+import 'package:beacon_widget/src/resolver.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

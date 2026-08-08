@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:no_screenshot/screenshot_snapshot.dart';
 
-import '../beacon.dart';
+import '../beacon_widget.dart';
 import 'payload.dart';
 
 // This file's `dart:io` use (for the Platform.is* checks below) means the
