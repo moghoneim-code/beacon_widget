@@ -4,8 +4,8 @@ description: >-
   properties, geometry and ancestor chain on your development machine's
   clipboard — ready to paste into an AI coding agent.
 version: 0.1.0
-repository: https://github.com/moghoneim-code/beacon
-issue_tracker: https://github.com/moghoneim-code/beacon/issues
+repository: https://github.com/moghoneim-code/beacon_widget
+issue_tracker: https://github.com/moghoneim-code/beacon_widget/issues
 topics:
   - devtools
   - debugging
