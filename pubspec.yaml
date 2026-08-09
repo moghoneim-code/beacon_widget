@@ -3,17 +3,11 @@ description: >-
   Tap a widget in your running Flutter app and get its file:line, theme
   properties and geometry on your clipboard, ready to paste into an AI coding
   agent.
-version: 0.3.3
+version: 0.3.4
 repository: https://github.com/moghoneim-code/beacon_widget
 issue_tracker: https://github.com/moghoneim-code/beacon_widget/issues
 homepage: https://github.com/moghoneim-code/beacon_widget
 documentation: https://github.com/moghoneim-code/beacon_widget#quick-start
-screenshots:
-  - description: >-
-      Tapping widgets in an app running on a phone, then pasting their
-      references into a coding agent.
-    path: doc/demo.gif
-
 topics:
   - devtools
   - debugging

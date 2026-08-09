@@ -1,3 +1,11 @@
+## 0.3.4
+
+- Drop the pubspec `screenshots` entry. pub.dev rendered the demo recording as
+  a thumbnail in the sidebar, on a white panel that read as a broken logo
+  against the dark page. The recording still plays inline in the README, which
+  is where it belongs.
+- Remove the logo from the top of the README.
+
 ## 0.3.3
 
 - Replace the overlay button's mark with a crosshair, and add a matching logo

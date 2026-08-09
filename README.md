@@ -1,5 +1,3 @@
-<img src="https://raw.githubusercontent.com/moghoneim-code/beacon_widget/main/doc/logo.png" width="88" alt="beacon">
-
 # beacon_widget
 
 Tap a widget in your running Flutter app. Get an exact reference to it on your clipboard:
