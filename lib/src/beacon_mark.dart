@@ -1,25 +1,28 @@
-import 'dart:math' as math;
-
 import 'package:flutter/widgets.dart';
 
-/// Beacon's own mark — a dot broadcasting a signal upward — used as the
-/// FAB's resting-state icon instead of a generic Material icon. `touch_app`
-/// said "tap here"; this says "this is Beacon", which is the point of
-/// putting a mark on the one piece of chrome every user of the tool sees.
+/// Beacon's mark: a crosshair around a filled centre.
 ///
-/// Hand-drawn with [CustomPainter] rather than a bundled image asset: it's
-/// three primitives (an arc, an arc, a dot), scales to any size without a
-/// raster source, and inherits its color from [IconTheme] the same way a
-/// built-in [Icon] would, so it drops into [FloatingActionButton.child]
-/// (or anywhere else) and automatically matches whatever foreground color
-/// the ambient theme computes.
+/// Used as the overlay button's resting-state icon, and drawn to the same
+/// proportions as `doc/logo.svg` so the button and the project's logo read
+/// as one thing.
+///
+/// The metaphor is pointing, not broadcasting — the button puts you into
+/// select mode so you can pick a widget out of the tree. An earlier version
+/// drew concentric arcs over a dot and was indistinguishable from a wifi
+/// icon, which suggested the opposite of what the button does.
+///
+/// Hand-drawn with [CustomPainter] rather than a bundled asset: it is four
+/// strokes and a dot, scales to any size without a raster source, and
+/// inherits its colour from [IconTheme] the way a built-in [Icon] would, so
+/// it drops into [FloatingActionButton.child] and picks up whatever
+/// foreground colour the ambient theme computes.
 class BeaconMark extends StatelessWidget {
   const BeaconMark({super.key, this.size = 24, this.color});
 
   /// Side length of the square the mark is drawn into.
   final double size;
 
-  /// Overrides the inherited [IconTheme] color when set.
+  /// Overrides the inherited [IconTheme] colour when set.
   final Color? color;
 
   @override
@@ -38,25 +41,36 @@ class _BeaconMarkPainter extends CustomPainter {
 
   final Color color;
 
+  // Fractions of the side length, taken from doc/logo.svg (a 512pt canvas)
+  // so the two stay in step if either is retouched.
+  static const double _ring = 112 / 512;
+  static const double _stroke = 30 / 512;
+  static const double _dot = 38 / 512;
+  static const double _tickInner = 108 / 512;
+  static const double _tickOuter = 160 / 512;
+
   @override
   void paint(Canvas canvas, Size size) {
-    final Offset dot = Offset(size.width / 2, size.height * 0.72);
-    final double dotRadius = size.width * 0.09;
-    canvas.drawCircle(dot, dotRadius, Paint()..color = color);
+    final double s = size.shortestSide;
+    final Offset c = Offset(size.width / 2, size.height / 2);
 
-    final Paint arcPaint = Paint()
+    final Paint stroke = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.09
+      ..strokeWidth = s * _stroke
       ..strokeCap = StrokeCap.round;
 
-    // Two rings, upper half only (math.pi → 2*math.pi sweeps west→north→east
-    // in Canvas's y-down angle convention) — waves rising from the dot,
-    // rather than a full bullseye, so it reads as "broadcasting" and not
-    // "target".
-    for (final double radius in <double>[size.width * 0.27, size.width * 0.42]) {
-      canvas.drawArc(Rect.fromCircle(center: dot, radius: radius), math.pi, math.pi, false, arcPaint);
+    canvas.drawCircle(c, s * _ring, stroke);
+
+    // Four ticks on the axes. They start just inside the ring so the mark
+    // stays one connected shape at small sizes, where a gap turns to mush.
+    final double inner = s * _tickInner;
+    final double outer = s * _tickOuter;
+    for (final Offset axis in const <Offset>[Offset(0, -1), Offset(0, 1), Offset(-1, 0), Offset(1, 0)]) {
+      canvas.drawLine(c + axis * inner, c + axis * outer, stroke);
     }
+
+    canvas.drawCircle(c, s * _dot, Paint()..color = color);
   }
 
   @override

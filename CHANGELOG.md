@@ -1,3 +1,11 @@
+## 0.3.3
+
+- Replace the overlay button's mark with a crosshair, and add a matching logo
+  (`doc/logo.svg`, `doc/logo-mono.svg`, `doc/logo.png`). The previous mark —
+  concentric arcs over a dot — was indistinguishable from a wifi icon, which
+  suggested broadcasting rather than what the button does: point at a widget.
+- Show the logo at the top of the README.
+
 ## 0.3.2
 
 - Add `homepage` and `documentation` links to the pubspec, so the pub.dev
