@@ -1,3 +1,8 @@
+## 0.3.2
+
+- Add `homepage` and `documentation` links to the pubspec, so the pub.dev
+  sidebar links straight to the repository and the setup instructions.
+
 ## 0.3.1
 
 - Add a demo recording to the README and as a pub.dev screenshot: tapping
