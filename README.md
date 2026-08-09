@@ -8,6 +8,8 @@ Tap a widget in your running Flutter app. Get an exact reference to it on your c
 
 Paste that into Cursor, Claude Code, Codex CLI, or any other coding agent.
 
+![Tapping widgets in an app running on a phone, then pasting their references into a coding agent](https://raw.githubusercontent.com/moghoneim-code/beacon_widget/main/doc/demo.gif)
+
 ## Why
 
 Describing a widget to an agent is lossy. "Make the checkout button rounder" leaves it guessing

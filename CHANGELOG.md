@@ -1,3 +1,9 @@
+## 0.3.1
+
+- Add a demo recording to the README and as a pub.dev screenshot: tapping
+  widgets in an app running on a phone, then pasting their references into a
+  coding agent.
+
 ## 0.3.0
 
 The bridge now explains itself when it can't connect, instead of waiting in
